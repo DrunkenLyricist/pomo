@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>pomodoro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap');
+
+    body {
+      font-family: 'Atkinson Hyperlegible', Arial, sans-serif;
+      text-align: center;
+      background-color: #ffffff; /* Default background color */
+      transition: background-color 0.5s ease;
+    }
+
+    body.break {
+      background-color: #38858a; /* Break background color */
+    }
+
+    body.work {
+      background-color: #ba4949; /* Work background color */
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .timer {
+      font-size: 25.2vw;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>mortif's timer</h1>
+  <div>
+    <label for="focusTimeInput">phocus:</label>
+    <input type="text" id="focusTimeInput" value="25" pattern="[0-9]+([.][0-9]+)?">
+  </div>
+  <div>
+    <label for="breakTimeInput">brake:</label>
+    <input type="text" id="breakTimeInput" value="5" pattern="[0-9]+([.][0-9]+)?">
+  </div>
+  <div>
+    <label for="longBreakTimeInput">brake brake</label>
+    <input type="text" id="longBreakTimeInput" value="15" pattern="[0-9]+([.][0-9]+)?">
+  </div>
+  <div class="timer" id="timer">25:00</div>
+  <button id="startBtn">chalo</button>
+  <button id="stopBtn">rukja</button>
+
+  <audio id="buttonClickSound" src="./click.ogg"></audio>
+  <audio id="alarmSound" src="./alarm-bell.mp3"></audio>
+
+  <script>
+    var timerInterval;
+    var isRunning = false;
+    var pomodoroCount = 0;
+    var audioElement = new Audio(src="C:/Users/DrunkenLyricist/Downloads/alarm-bell.mp3");
+
+    function playButtonClickSound() {
+      var buttonClickSound = document.getElementById('buttonClickSound');
+      buttonClickSound.currentTime = 0;
+      buttonClickSound.play();
+    }
+
+    function startTimer(duration, isBreak) {
+      var timerDisplay = document.getElementById('timer');
+      var bodyElement = document.body;
+      var minutes, seconds;
+
+      // Enter fullscreen mode
+      document.documentElement.requestFullscreen();
+
+      // Remove work or break classes from body
+      bodyElement.classList.remove('work', 'break');
+
+      // Add break or work class to body
+      if (isBreak) {
+        bodyElement.classList.add('break');
+      } else {
+        bodyElement.classList.add('work');
+      }
+
+      timerInterval = setInterval(function () {
+        minutes = parseInt(duration / 60, 10);
+        seconds = parseInt(duration % 60, 10);
+
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        timerDisplay.textContent = minutes + ':' + seconds;
+
+        if (--duration < 0) {
+          clearInterval(timerInterval);
+          audioElement.play();
+          isRunning = false;
+          pomodoroCount++;
+
+          if (isBreak) {
+            // Work time
+            var focusTimeInput = document.getElementById('focusTimeInput');
+            var focusTime = parseInt(focusTimeInput.value) * 60;
+            startTimer(focusTime, false);
+          } else {
+            if (pomodoroCount % 4 === 0) {
+              // Long break time
+              var longBreakTimeInput = document.getElementById('longBreakTimeInput');
+              var longBreakTime = parseInt(longBreakTimeInput.value) * 60;
+              startTimer(longBreakTime, true);
+              pomodoroCount = 0; // Reset pomodoro count after the long break
+            } else {
+              // Break time
+              var breakTimeInput = document.getElementById('breakTimeInput');
+              var breakTime = parseInt(breakTimeInput.value) * 60;
+              startTimer(breakTime, true);
+            }
+          }
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      isRunning = false;
+      // Exit fullscreen mode
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+      // Remove break or work class from body
+      document.body.classList.remove('break', 'work');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', function () {
+      if (!isRunning) {
+        playButtonClickSound();
+        var focusTimeInput = document.getElementById('focusTimeInput');
+        var focusTime = parseInt(focusTimeInput.value) * 60;
+
+        if (focusTime > 0) {
+          startTimer(focusTime, false);
+          isRunning = true;
+        } else {
+          alert('Invalid focus time. Please enter a valid value.');
+        }
+      }
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', function () {
+      playButtonClickSound();
+      stopTimer();
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevents the spacebar from scrolling the page
+        document.getElementById('stopBtn').click();
+      } else if (event.code === 'Enter') {
+        event.preventDefault(); // Prevents the enter key from submitting a form
+        document.getElementById('startBtn').click();
+      }
+    });
+  </script>
+</body>
+</html>
